@@ -1,0 +1,62 @@
+#!/usr/bin/bash
+
+usage() {
+  # TODO: fix usage instructions by doing multiline echo...
+echo "Usage: $0 [OPTIONS] [file]"
+echo ""
+echo "Arguments:"
+echo "  [file]  The file to be rendered. Set to - for standard input."
+echo ""
+echo "Options:"
+echo "  -w, --width <width>                   Resize the image to a provided width"
+echo "  -h, --height <height>                 Resize the image to a provided height"
+echo "  -x <x>                                X offset [default: 0]"
+echo "  -y <y>                                Y offset [default: 0]"
+#  -a, --absolute-offset                 Make the x and y offset be relative to the top left terminal corner. If not set, they are relative to the cursor's position.
+#  -r, --recursive                       Recurse down directories if passed one
+#  -b, --blocks                          Force block output
+#  -n, --name                            Output the name of the file before displaying
+#  -t, --transparent                     Display transparent images with transparent background
+#  -f, --frame-rate <frames-per-second>  Play the gif at a given frame rate
+#  -1, --once                            Loop only once through the gif
+#  -s, --static                          Show only the first frame of the gif
+#  -H, --help                            Print help information
+#  -V, --version                         Print version
+
+  exit 1;
+}
+
+viuopts=""
+foundopts=""
+
+while getopts ":w:h:x:y:" opt; do
+  case ${opt} in
+    w|h|x|y)
+      # TODO: error on passing an opt twice
+      viuopts="${viuopts} -${opt} ${OPTARG}"
+      foundopts="${foundopts} ${opt}"
+      ;;
+    :)
+      echo "Option -${OPTARG} requires an argument."
+      echo ""
+      usage
+      ;;
+    ?)
+      echo "Invalid option: -${OPTARG}."
+      echo ""
+      usage
+      ;;
+  esac
+done
+
+shift $((OPTIND-1))
+
+file=$1
+
+# TODO: use foundopts to calculate missing opts, run getopts again. New error type on already found opt: cannot pass several times.
+
+if [ -z "${file}" ]; then
+  dot -Tpng | viu ${viuopts} -
+else
+  dot -Tpng ${file} | viu ${viuopts} -
+fi
