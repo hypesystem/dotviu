@@ -29,34 +29,52 @@ echo "  -y <y>                                Y offset [default: 0]"
 viuopts=""
 foundopts=""
 
-while getopts ":w:h:x:y:" opt; do
-  case ${opt} in
-    w|h|x|y)
-      # TODO: error on passing an opt twice
-      viuopts="${viuopts} -${opt} ${OPTARG}"
-      foundopts="${foundopts} ${opt}"
-      ;;
-    :)
-      echo "Option -${OPTARG} requires an argument."
-      echo ""
-      usage
-      ;;
-    ?)
-      echo "Invalid option: -${OPTARG}."
-      echo ""
-      usage
-      ;;
-  esac
-done
+parseopts() {
+  while getopts ":w:h:x:y:" opt; do
+    case ${opt} in
+      w|h|x|y)
+        case ${opt} in
+          "${foundopts}")
+            echo "Option -${OPTARG} passed twice."
+            echo ""
+            usage
+            ;;
+          *)
+            viuopts="${viuopts} -${opt} ${OPTARG}"
+            if [ -z "$foundopts" ]; then
+              foundopts="${opt}"
+            else
+              foundopts="${foundopts}|${opt}"
+            fi
+            ;;
+        esac
+        ;;
+      :)
+        echo "Option -${OPTARG} requires an argument."
+        echo ""
+        usage
+        ;;
+      ?)
+        echo "Invalid option: -${OPTARG}."
+        echo ""
+        usage
+        ;;
+    esac
+  done
+}
 
+parseopts "$@"
 shift $((OPTIND-1))
-
 file=$1
-
-# TODO: use foundopts to calculate missing opts, run getopts again. New error type on already found opt: cannot pass several times.
 
 if [ -z "${file}" ]; then
   dot -Tpng | viu ${viuopts} -
 else
+  # See if there were more opts after file
+  shift 1
+  OPTIND=0
+  parseopts "$@"
+  shift $((OPTIND-1))
+
   dot -Tpng ${file} | viu ${viuopts} -
 fi
